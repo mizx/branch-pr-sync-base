@@ -18,3 +18,4 @@ jobs:
           base_branch: main
           dry_run: true
           require_auto_merge: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -2,6 +2,9 @@ name: 'Branch PR Sync Base'
 description: 'Sync branches from a specified base branch (default: main) into open PRs.'
 
 inputs:
+  github_token:
+    description: 'GitHub token for authentication.'
+    required: true
   dry_run:
     description: 'If true, logs actions without merging/pushing.'
     required: false
@@ -49,7 +52,7 @@ runs:
     - name: Fetch PRs
       shell: bash
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ inputs.github_token }}
       run: |
         echo "🚀 Starting PR sync workflow..."
         echo "🔍 Fetching PRs targeting '${{ inputs.base_branch }}'..."
