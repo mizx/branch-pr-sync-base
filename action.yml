@@ -58,12 +58,12 @@ runs:
         echo "🔍 Fetching PRs targeting '${{ inputs.base_branch }}'..."
 
         if [ "${{ inputs.require_auto_merge }}" = "true" ]; then
-          filter='.[] | select(.autoMerge != null) | "\(.number) \(.headRefName) \(.autoMerge != null)"'
+          filter='.[] | select(.autoMergeRequest != null) | "\(.number) \(.headRefName) \(.autoMergeRequest != null)"'
         else
           filter='.[] | "\(.number) \(.headRefName) true"'
         fi
 
-        prs=$(gh pr list --state open --base "${{ inputs.base_branch }}" --json number,headRefName,autoMerge --jq "$filter")
+        prs=$(gh pr list --state open --base "${{ inputs.base_branch }}" --json number,headRefName,autoMergeRequest --jq "$filter")
 
         if [ -z "$prs" ]; then
           echo "✅ No PRs to update."
