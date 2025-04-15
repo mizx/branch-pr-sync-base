@@ -12,8 +12,8 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Run Composite Action
-        uses: ./action.yml
+      - name: Use Branch PR Sync Base Action
+        uses: mizx/branch-pr-sync-base@main
         with:
           base_branch: main
           dry_run: true
