@@ -9,7 +9,10 @@ jobs:
   trigger-sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Run Action
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Composite Action
         uses: ./action.yaml
         with:
           base_branch: main
