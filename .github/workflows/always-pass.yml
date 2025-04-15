@@ -2,8 +2,6 @@ name: Always Passing Status Check
 
 on:
   pull_request:
-    branches: 
-        - 'main'
 
 jobs:
   always-pass:
