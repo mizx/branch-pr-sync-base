@@ -97,22 +97,26 @@ runs:
           git fetch origin "$branch"
           git checkout "$branch"
 
+          # Attempt to merge
           if [ -z "${{ inputs.commit_message }}" ]; then
-            git merge "origin/${{ inputs.base_branch }}" --no-edit
+            git merge "origin/${{ inputs.base_branch }}" --no-edit || {
+              echo "⚠️ Merge for PR #$number on branch '$branch' had conflicts. Skipping commit."
+              git merge --abort || true
+              continue
+            }
           else
-            git merge "origin/${{ inputs.base_branch }}" --no-edit -m "${{ inputs.commit_message }}"
-          fi
-
-          if [ $? -ne 0 ]; then
-            echo "⚠️ Merge for PR #$number on branch '$branch' had conflicts. Skipping commit."
-            continue
+            git merge "origin/${{ inputs.base_branch }}" --no-edit -m "${{ inputs.commit_message }}" || {
+              echo "⚠️ Merge for PR #$number on branch '$branch' had conflicts. Skipping commit."
+              git merge --abort || true
+              continue
+            }
           fi
 
           git push origin HEAD
           if [ $? -eq 0 ]; then
             echo "✅ [$branch] PR #$number — Sync completed successfully!"
           else
-            echo "⚠️ Merge conflict for PR #$number on branch '$branch'. Skipping."
+            echo "⚠️ Push for PR #$number on branch '$branch' failed. Skipping."
           fi
         done < pr_list.txt
 
