@@ -22,5 +22,5 @@ jobs:
         with:
           base_branch: main
           dry_run: false
-          require_auto_merge: false
+          require_auto_merge: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
