@@ -29,7 +29,7 @@ runs:
   using: 'composite'
   steps:
     - name: Merge base into PR branches
-      uses: ./github/workflows/sync-main-into-prs.yml
+      uses: ./github/workflows/sync-main-into-prs.yaml
       with:
         dry_run: ${{ inputs.dry_run }}
         base_branch: ${{ inputs.base_branch }}
