@@ -32,4 +32,4 @@ jobs:
     with:
       base_branch: main
       require_auto_merge: true
-    
+```
