@@ -1,5 +1,6 @@
 name: 'Branch PR Sync Base'
 description: 'Sync branches from a specified base branch (default: main) into open PRs.'
+
 inputs:
   dry_run:
     description: 'If true, logs actions without merging/pushing.'
@@ -28,12 +29,92 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Merge base into PR branches
-      uses: ./github/workflows/sync-main-into-prs.yaml
-      with:
-        dry_run: ${{ inputs.dry_run }}
-        base_branch: ${{ inputs.base_branch }}
-        require_auto_merge: ${{ inputs.require_auto_merge }}
-        author_name: ${{ inputs.author_name }}
-        author_email: ${{ inputs.author_email }}
-        commit_message: ${{ inputs.commit_message }}
+    - name: Set up Git
+      shell: bash
+      run: |
+        git config --global user.name "${{ inputs.author_name }}"
+        git config --global user.email "${{ inputs.author_email }}"
+
+    - name: Debug Input Parameters
+      shell: bash
+      run: |
+        echo "🛠️ Debugging Input Parameters:"
+        echo "  - Base Branch: '${{ inputs.base_branch }}'"
+        echo "  - Require Auto Merge: '${{ inputs.require_auto_merge }}'"
+        echo "  - Dry Run: '${{ inputs.dry_run }}'"
+        echo "  - Commit Message: '${{ inputs.commit_message }}'"
+        echo "  - Author Name: '${{ inputs.author_name }}'"
+        echo "  - Author Email: '${{ inputs.author_email }}'"
+
+    - name: Fetch PRs
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "🚀 Starting PR sync workflow..."
+        echo "🔍 Fetching PRs targeting '${{ inputs.base_branch }}'..."
+
+        if [ "${{ inputs.require_auto_merge }}" = "true" ]; then
+          filter='.[] | select(.autoMerge != null) | "\(.number) \(.headRefName) \(.autoMerge != null)"'
+        else
+          filter='.[] | "\(.number) \(.headRefName) true"'
+        fi
+
+        prs=$(gh pr list --state open --base "${{ inputs.base_branch }}" --json number,headRefName,autoMerge --jq "$filter")
+
+        if [ -z "$prs" ]; then
+          echo "✅ No PRs to update."
+          exit 0
+        fi
+
+        echo "$prs" > pr_list.txt
+
+    - name: Sync PRs
+      shell: bash
+      run: |
+        while read number branch auto_merge; do
+          if [ "${{ inputs.require_auto_merge }}" = "true" ] && [ "$auto_merge" != "true" ]; then
+            echo "🔁 Skipping PR #$number: Auto-merge is not enabled."
+            continue
+          fi
+
+          echo "🔁 [$branch] PR #$number — Syncing from ${{ inputs.base_branch }}..."
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "🚫 Dry run enabled — the following actions would be taken for PR #$number on branch '$branch':"
+            echo "  - Fetching origin/${{ inputs.base_branch }}"
+            echo "  - Fetching origin/$branch"
+            echo "  - Attempting merge"
+            continue
+          fi
+
+          git fetch origin "${{ inputs.base_branch }}"
+          git fetch origin "$branch"
+          git checkout "$branch"
+
+          if [ -z "${{ inputs.commit_message }}" ]; then
+            git merge "origin/${{ inputs.base_branch }}" --no-edit
+          else
+            git merge "origin/${{ inputs.base_branch }}" --no-edit -m "${{ inputs.commit_message }}"
+          fi
+
+          if [ $? -ne 0 ]; then
+            echo "⚠️ Merge for PR #$number on branch '$branch' had conflicts. Skipping commit."
+            continue
+          fi
+
+          git push origin HEAD
+          if [ $? -eq 0 ]; then
+            echo "✅ [$branch] PR #$number — Sync completed successfully!"
+          else
+            echo "⚠️ Merge conflict for PR #$number on branch '$branch'. Skipping."
+          fi
+        done < pr_list.txt
+
+        if [ "${{ inputs.dry_run }}" = "true" ]; then
+          echo "🚫 Dry run completed — no changes were made."
+        else
+          echo "✅ Sync completed successfully for all PRs!"
+        fi
+
+        echo "🔚 Workflow finished."
