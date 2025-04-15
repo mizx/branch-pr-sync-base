@@ -93,9 +93,15 @@ runs:
             continue
           fi
 
+          # Ensure the base branch is fetched and up-to-date
           git fetch origin "${{ inputs.base_branch }}"
+          git checkout "${{ inputs.base_branch }}"
+          git pull origin "${{ inputs.base_branch }}"
+
+          # Ensure the target branch is fetched and up-to-date
           git fetch origin "$branch"
           git checkout "$branch"
+          git pull origin "$branch"
 
           # Attempt to merge
           if [ -z "${{ inputs.commit_message }}" ]; then
