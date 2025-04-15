@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Composite Action
-        uses: ./action.yaml
+        uses: ./action.yml
         with:
           base_branch: main
           dry_run: true
