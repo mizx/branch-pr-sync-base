@@ -67,6 +67,8 @@ runs:
 
         if [ -z "$prs" ]; then
           echo "✅ No PRs to update."
+          # Create an empty pr_list.txt file to prevent errors in the next step
+          touch pr_list.txt
           exit 0
         fi
 
