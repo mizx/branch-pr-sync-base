@@ -1,0 +1,1 @@
+Test action when Auto Merge is disabled.
