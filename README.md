@@ -37,3 +37,6 @@ jobs:
           require_auto_merge: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+## Test
+This is a conflicting change from `test/merge-conflict`.
